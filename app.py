@@ -58,6 +58,7 @@ def download():
     ydl_opts = {
         'noplaylist': True,
         'quiet': True,
+        'cookies_from_browser': 'chrome',
         'geo_bypass': True,
     }
 
