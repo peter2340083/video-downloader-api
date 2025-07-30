@@ -58,6 +58,7 @@ def download():
     ydl_opts = {
         'noplaylist': True,
         'quiet': True,
+        'geo_bypass': True,
     }
 
     if dl_type == 'audio':
