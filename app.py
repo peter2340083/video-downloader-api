@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, Response, stream_with_context, after_this_request
+from flask import Flask, request, send_file, Response, stream_with_context
 from flask_cors import CORS
 import yt_dlp
 import subprocess
@@ -18,7 +18,7 @@ def progress():
 
     if dl_type == 'audio':
         format_opt = 'bestaudio'
-        ydl_command = ['yt-dlp', url, '-f', format_opt, '--extract-audio', '--audio-format', 'mp3']
+        ydl_command = ['yt-dlp', url, '-f', format_opt]
     else:
         format_opt = 'best[ext=mp4]/best'
         ydl_command = ['yt-dlp', url, '-f', format_opt]
@@ -40,7 +40,6 @@ def progress():
 
 
 def delayed_delete_file(path, delay=3600):
-    # 延遲刪除函式，等待 delay 秒後嘗試刪除
     time.sleep(delay)
     try:
         os.remove(path)
@@ -62,14 +61,7 @@ def download():
     }
 
     if dl_type == 'audio':
-        ydl_opts.update({
-            'format': 'bestaudio',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
-        })
+        ydl_opts['format'] = 'bestaudio'
     else:
         ydl_opts['format'] = 'best[ext=mp4]/best'
 
@@ -78,15 +70,11 @@ def download():
             info = ydl.extract_info(video_url, download=True)
             filename = ydl.prepare_filename(info)
 
-            if dl_type == 'audio':
-                filename = os.path.splitext(filename)[0] + '.mp3'
-
             filename = os.path.abspath(filename)
 
             if not os.path.exists(filename):
                 return "下載失敗：找不到檔案"
 
-            # 啟動背景執行緒延遲刪除，避免檔案被占用刪除失敗
             threading.Thread(target=delayed_delete_file, args=(filename, 3600), daemon=True).start()
 
             return send_file(filename, as_attachment=True, download_name=os.path.basename(filename))
